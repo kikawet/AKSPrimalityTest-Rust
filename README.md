@@ -2,6 +2,10 @@
 
 WIP
 
+# Version
+- cargo 1.56.0
+- rustc 1.56.1
+
 # TODO
 - [ ] add tests
   - [ ] test 1 - If n = a^b for integers a > 1 and b > 1, output composite.
