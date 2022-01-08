@@ -14,6 +14,7 @@ WIP
   - [ ] test 4 - If n ≤ r, output prime
   - [ ] test 5 - check that for every coeficient (ai) in (x-1)^n ai%n == 0 // Calculate binomials like madman
 - [ ] add tests to the fn is_prime
+- [ ] refactor into multiple modules
 - [ ] profile
 
 # DONE
