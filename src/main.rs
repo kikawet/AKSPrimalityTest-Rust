@@ -1,9 +1,12 @@
-use std::{env, ops::{Add, AddAssign, Not, SubAssign}};
+use std::{
+    env,
+    ops::{Add, AddAssign, Not, Range, Sub, SubAssign},
+};
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rug::{
     ops::{CompleteRound, Pow},
-    Complete, Float, Integer, Assign,
+    Assign, Complete, Float, Integer,
 };
 
 #[derive(Debug)]
@@ -13,7 +16,7 @@ struct TestResult {
 }
 
 struct Context {
-    r: Integer,
+    r: u128,
 }
 
 /// * @brief Step 1 - If n = a^b for integers a > 1 and b > 1, output composite
@@ -21,21 +24,25 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
     let n_as_float = Float::with_val(u32::MAX, n);
     let top_limit = calculate_log2(n);
 
-    let found_any_integer = (2..=top_limit).into_par_iter().find_any(|b| -> bool {
+    let found_any_integer = (2..=top_limit).into_par_iter().any(|b| -> bool {
         n_as_float
             .as_ref()
             .as_float()
-            .pow(1f32 / (*b as f32))
-            .complete(20)
+            .pow(1f64 / (b as f64))
+            .complete(256)
             .is_integer()
     });
 
-    if found_any_integer == None {
+    print!("Test 1 done");
+
+    if found_any_integer.not() {
+        println!();
         TestResult {
             continue_testing: true,
             is_prime: None,
         }
     } else {
+        println!(" with fail");
         TestResult {
             continue_testing: false,
             is_prime: Some(false),
@@ -56,10 +63,10 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
 
     while next_r && r.lt(&maxr) {
         next_r = false;
-        
+
         let mut k = Integer::from(1);
-        while next_r.not() && k.le(&maxk){
-            if let Some(modd) = n.pow_mod_ref(&k, &r){
+        while next_r.not() && k.le(&maxk) {
+            if let Some(modd) = n.pow_mod_ref(&k, &r) {
                 let modulo = Integer::from(modd);
                 next_r = modulo.eq(&1u8) || modulo.eq(&0u8);
             }
@@ -71,7 +78,9 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
 
     r.sub_assign(1);
 
-    context.r.assign(r);
+    println!("r={}", &r);
+
+    context.r = r.try_into().unwrap();
 
     TestResult {
         continue_testing: true,
@@ -79,7 +88,32 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
     }
 }
 
-/// * @brief Step 6 - n  must be prime
+/// * @brief Step 3 - If 1 < gcd(a,n) < n for some a ≤ r, output composite
+fn test3(n: &Integer, context: &mut Context) -> TestResult {
+    let found_any = (context.r..1)
+        .into_par_iter()
+        .map(|i| -> Integer { Integer::from(i) })
+        .map(|x| -> Integer { n.gcd_ref(&x).complete() })
+        .any(|gcd| -> bool { 1 < gcd || gcd < *n });
+
+    print!("Test 3 done");
+
+    if found_any {
+        println!();
+        TestResult {
+            continue_testing: false,
+            is_prime: Some(false),
+        }
+    } else {
+        println!(" with fail");
+        TestResult {
+            continue_testing: true,
+            is_prime: None,
+        }
+    }
+}
+
+/// * @brief Step 6 - n must be prime
 fn test6(_: &Integer, _: &mut Context) -> TestResult {
     TestResult {
         continue_testing: false,
@@ -88,13 +122,12 @@ fn test6(_: &Integer, _: &mut Context) -> TestResult {
 }
 
 fn is_prime(n: &Integer) -> bool {
-    let tests = [test1, test2, test6];
+    let tests = [test1, test2, test3, test6];
     let mut i = 1;
-    let mut context = Context { r: Integer::from(0) };
+    let mut context = Context { r: 0 };
     let mut result = tests[0](n, &mut context);
-    
+
     while result.continue_testing && i < tests.len() {
-        
         result = tests[i](n, &mut context);
         i += 1;
     }
