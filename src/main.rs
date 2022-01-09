@@ -52,35 +52,42 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
 
 /// * @brief Step 2 - Find the smallest r such that Or(n) > (log2 n)^2
 fn test2(n: &Integer, context: &mut Context) -> TestResult {
-    let maxk = Integer::from(calculate_log2(n)).pow(2);
-    let maxr = Integer::from(calculate_log2(n))
+    let maxk: u128 = Integer::from(calculate_log2(n)).pow(2).try_into().unwrap();
+    let maxr: u128 = Integer::from(calculate_log2(n))
         .pow(5)
         .add(Integer::from(1u8))
-        .max(Integer::from(3u8));
+        .max(Integer::from(3u8))
+        .try_into()
+        .unwrap();
 
+    let mut r = 2;
     let mut next_r = true;
-    let mut r = Integer::from(2);
+    let k_range = (1..=maxk)
+        .into_par_iter()
+        .map(Integer::from)
+        .into_par_iter();
 
-    while next_r && r.lt(&maxr) {
-        next_r = false;
+    while next_r && r < maxr {
+        let r_as_ref_integer = &Integer::from(r);
 
-        let mut k = Integer::from(1);
-        while next_r.not() && k.le(&maxk) {
-            if let Some(modd) = n.pow_mod_ref(&k, &r) {
-                let modulo = Integer::from(modd);
-                next_r = modulo.eq(&1u8) || modulo.eq(&0u8);
-            }
-            k.add_assign(1);
-        }
+        next_r = k_range
+            .clone() //hopefully this only clones the iterator :)
+            .any(|k| -> bool {
+                if let Some(modd) = n.pow_mod_ref(&k, r_as_ref_integer) {
+                    let modulo = Integer::from(modd);
+                    return modulo.eq(&1u8) || modulo.eq(&0u8);
+                }
+                false
+            });
 
-        r.add_assign(1);
+        r += 1;
     }
 
-    r.sub_assign(1);
+    r -= 1;
 
-    println!("r={}", &r);
+    println!("Step 2 done, r={}", r);
 
-    context.r = r.try_into().unwrap();
+    context.r = r;
 
     TestResult {
         continue_testing: true,
