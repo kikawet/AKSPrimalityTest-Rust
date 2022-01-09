@@ -1,5 +1,6 @@
 use std::env;
 
+use rayon::iter::{ParallelIterator, IntoParallelIterator};
 use rug::{Integer, Complete, Float, ops::{Pow, CompleteRound}};
 
 #[derive(Debug)]
@@ -10,21 +11,22 @@ struct TestResult {
 
 /// * @brief Step 1 - If n = a^b for integers a > 1 and b > 1, output composite
 fn test1(n: &Integer) -> TestResult {
-
-    let float_n = Float::with_val(u32::MAX, n);
+    let n_as_float = Float::with_val(u32::MAX, n);
     let top_limit = n.significant_bits() - 1; // log2(n)
     
-    for b in 2..=top_limit{
-        let a = float_n.as_ref()
-                                .as_float()
-                                .pow(1f32/(b as f32))
-                                .complete(20);
-        if a.is_integer() {
-            return TestResult {continue_testing: false, is_prime: Some(false)};
-        }
-    }
+    let found_any_integer = (2..=top_limit).into_par_iter().find_any(|b| -> bool {
+        n_as_float.as_ref()
+            .as_float()
+            .pow(1f32/(*b as f32))
+            .complete(20)
+            .is_integer()        
+    });
 
-    TestResult {continue_testing: true, is_prime: Some(true)}
+    if found_any_integer == None {
+        TestResult {continue_testing: true, is_prime: None}
+    }else{
+        TestResult {continue_testing: false, is_prime: Some(false)}
+    }
 }
 
 fn test2(n: &Integer) -> TestResult {
