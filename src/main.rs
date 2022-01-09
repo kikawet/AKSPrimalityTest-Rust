@@ -1,6 +1,6 @@
 use std::{
     env,
-    ops::{Add, AddAssign, Not, Range, Sub, SubAssign},
+    ops::{Add, AddAssign, Not, Range, Sub, SubAssign}, time::Instant,
 };
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -21,6 +21,8 @@ struct Context {
 
 /// * @brief Step 1 - If n = a^b for integers a > 1 and b > 1, output composite
 fn test1(n: &Integer, _: &mut Context) -> TestResult {
+    let start = Instant::now();
+
     let n_as_float = Float::with_val(u32::MAX, n);
     let top_limit = calculate_log2(n);
 
@@ -33,16 +35,16 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
             .is_integer()
     });
 
-    print!("Test 1 done");
+    let duration = start.elapsed();
+    println!("Test 1 done \telapsed time={:?}", duration);
 
     if found_any_integer.not() {
-        println!();
         TestResult {
             continue_testing: true,
             is_prime: None,
         }
     } else {
-        println!(" with fail");
+        println!("\t test didn't pass");
         TestResult {
             continue_testing: false,
             is_prime: Some(false),
@@ -52,6 +54,8 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
 
 /// * @brief Step 2 - Find the smallest r such that Or(n) > (log2 n)^2
 fn test2(n: &Integer, context: &mut Context) -> TestResult {
+    let start = Instant::now();
+
     let maxk: u128 = Integer::from(calculate_log2(n)).pow(2).try_into().unwrap();
     let maxr: u128 = Integer::from(calculate_log2(n))
         .pow(5)
@@ -85,7 +89,9 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
 
     r -= 1;
 
-    println!("Step 2 done, r={}", r);
+    let duration = start.elapsed();
+    println!("Step 2 done \telapsed time={:?}", duration);
+    println!("\tr={}",&r);
 
     context.r = r;
 
@@ -97,22 +103,24 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
 
 /// * @brief Step 3 - If 1 < gcd(a,n) < n for some a ≤ r, output composite
 fn test3(n: &Integer, context: &mut Context) -> TestResult {
+    let start = Instant::now();
+
     let found_any = (context.r..1)
         .into_par_iter()
         .map(|i| -> Integer { Integer::from(i) })
         .map(|x| -> Integer { n.gcd_ref(&x).complete() })
         .any(|gcd| -> bool { 1 < gcd || gcd < *n });
 
-    print!("Test 3 done");
+    let duration = start.elapsed();
+    println!("Test 3 done \telapsed time={:?}", duration);
 
     if found_any {
-        println!();
         TestResult {
             continue_testing: false,
             is_prime: Some(false),
         }
     } else {
-        println!(" with fail");
+        println!("\t test didn't pass");
         TestResult {
             continue_testing: true,
             is_prime: None,
