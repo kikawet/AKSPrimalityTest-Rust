@@ -1,11 +1,13 @@
 use std::{
     env,
-    ops::{Add, Not, Sub}, time::Instant,
+    ops::{Add, Not, Sub},
+    time::Instant,
 };
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rug::{
-    ops::{CompleteRound, Pow}, Complete, Float, Integer,
+    ops::{CompleteRound, Pow},
+    Complete, Float, Integer,
 };
 
 #[derive(Debug)]
@@ -62,31 +64,34 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
         .max(Integer::from(3u8))
         .try_into()
         .unwrap();
-    
+
     let k_range = (1..=maxk)
         .into_par_iter()
         .map(Integer::from)
         .into_par_iter();
 
-    let final_r = (2..maxr).into_par_iter().find_first(|r| -> bool{
-        let r_as_ref_integer = &Integer::from(*r);
-        let next_r = k_range
-            // @TODO: make sure this only clones the iterator
-            .clone() // hopefully this only clones the iterator :)
-            .any(|k| -> bool {
-                if let Some(modd) = n.pow_mod_ref(&k, r_as_ref_integer) {
-                    let modulo = Integer::from(modd);
-                    return modulo.eq(&1u8) || modulo.eq(&0u8);
-                }
-                false
-            });
-        
-        next_r.not()
-    }).unwrap();
+    let final_r = (2..maxr)
+        .into_par_iter()
+        .find_first(|r| -> bool {
+            let r_as_ref_integer = &Integer::from(*r);
+            let next_r = k_range
+                // @TODO: make sure this only clones the iterator
+                .clone() // hopefully this only clones the iterator :)
+                .any(|k| -> bool {
+                    if let Some(modd) = n.pow_mod_ref(&k, r_as_ref_integer) {
+                        let modulo = Integer::from(modd);
+                        return modulo.eq(&1u8) || modulo.eq(&0u8);
+                    }
+                    false
+                });
+
+            next_r.not()
+        })
+        .unwrap();
 
     let duration = start.elapsed();
     println!("Step 2 done \telapsed time={:?}", duration);
-    println!("\tr={}",&final_r);
+    println!("\tr={}", &final_r);
 
     context.r = final_r;
 
@@ -151,17 +156,16 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
     let start = Instant::now();
 
     let one = Integer::from(1);
-    let limit = n/Integer::from(2) - &one;
+    let limit = n / Integer::from(2) - &one;
     let mut current_root = one.clone();
     let mut i = one.clone();
 
     // Calculate binomials in an iterative way
     let has_divisible_coefficient = loop {
-        
         if i >= limit {
             break false;
         }
-        
+
         current_root *= n.sub(&i).complete().add(&one);
         current_root /= &i;
 
@@ -169,7 +173,7 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
             break true;
         }
 
-        i+=&one;
+        i += &one;
     };
 
     let duration = start.elapsed();
