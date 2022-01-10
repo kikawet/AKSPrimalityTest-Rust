@@ -162,10 +162,6 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
             break false;
         }
 
-        if i >= limit {
-            break false;
-        }
-
         current_root *= n.sub(&i).complete().add(&one);
         current_root /= &i;
 
