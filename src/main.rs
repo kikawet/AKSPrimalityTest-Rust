@@ -1,6 +1,6 @@
 use std::{
     env,
-    ops::{Add, Not}, time::Instant,
+    ops::{Add, Not, Sub}, time::Instant,
 };
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -110,12 +110,12 @@ fn test3(n: &Integer, context: &mut Context) -> TestResult {
     println!("Test 3 done \telapsed time={:?}", duration);
 
     if found_any {
+        println!("\t test didn't pass");
         TestResult {
             continue_testing: false,
             is_prime: Some(false),
         }
     } else {
-        println!("\t test didn't pass");
         TestResult {
             continue_testing: true,
             is_prime: None,
@@ -133,12 +133,55 @@ fn test4(n: &Integer, context: &mut Context) -> TestResult {
     println!("Test 4 done \telapsed time={:?}", duration);
 
     if is_le {
+        println!("\t test didn't pass");
         TestResult {
             continue_testing: false,
             is_prime: Some(true),
         }
     } else {
+        TestResult {
+            continue_testing: true,
+            is_prime: None,
+        }
+    }
+}
+
+/// * @brief Step 5 - if any coeficient (ai) in (x-1)^n ai%n != 0, output composite
+fn test5(n: &Integer, _: &mut Context) -> TestResult {
+    let start = Instant::now();
+
+    let one = Integer::from(1);
+    let limit = n/Integer::from(2) - &one;
+    let mut current_root = one.clone();
+    let mut i = one.clone();
+
+    // Calculate binomials in an iterative way
+    let has_divisible_coefficient = loop {
+
+        current_root *= n.sub(&i).complete().add(&one);
+        current_root /= &i;
+
+        if !current_root.is_divisible(n) {
+            break true;
+        }
+
+        if i >= limit {
+            break false;
+        }
+
+        i+=&one;
+    };
+
+    let duration = start.elapsed();
+    println!("Test 5 done \telapsed time={:?}", duration);
+
+    if has_divisible_coefficient {
         println!("\t test didn't pass");
+        TestResult {
+            continue_testing: false,
+            is_prime: Some(false),
+        }
+    } else {
         TestResult {
             continue_testing: true,
             is_prime: None,
@@ -155,7 +198,7 @@ fn test6(_: &Integer, _: &mut Context) -> TestResult {
 }
 
 fn is_prime(n: &Integer) -> bool {
-    let tests = [test1, test2, test3, test4, test6];
+    let tests = [test1, test2, test3, test4, test5, test6];
     let mut i = 1;
     let mut context = Context { r: 0 };
     let mut result = tests[0](n, &mut context);
