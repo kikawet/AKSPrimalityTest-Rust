@@ -1,6 +1,15 @@
 # AKSPrimalityTest-Rust
 
-WIP
+## What is My Project?
+
+Proof of concept programming AKS primality test in rust using vscode with remote code using a docker container
+
+# Run
+List of primes numbers - https://primes.utm.edu/lists/small/small.html
+
+```
+cargo run --release -- <CANDIDATE>
+```
 
 # Tests
 ```
@@ -10,9 +19,6 @@ cargo tests --release -- --tests-threads 3
 # Version
 - cargo 1.56.0
 - rustc 1.56.1
-
-# TODO
- - [ ] profile
 
 # DONE
  - [x] read user input
@@ -27,3 +33,4 @@ cargo tests --release -- --tests-threads 3
  - [x] add tests to the fn is_prime
  - [x] make sure tests actually pass 😒
  - [x] refactor into multiple modules
+ - [x] profile -> https://github.com/svenstaro/cargo-profiler
