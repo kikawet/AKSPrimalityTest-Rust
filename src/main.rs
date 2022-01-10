@@ -157,16 +157,16 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
 
     // Calculate binomials in an iterative way
     let has_divisible_coefficient = loop {
-
+        
+        if i >= limit {
+            break false;
+        }
+        
         current_root *= n.sub(&i).complete().add(&one);
         current_root /= &i;
 
         if !current_root.is_divisible(n) {
             break true;
-        }
-
-        if i >= limit {
-            break false;
         }
 
         i+=&one;
