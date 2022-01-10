@@ -4,6 +4,7 @@ use std::{
     time::Instant,
 };
 
+use log::{debug, error, info};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rug::{
     ops::{CompleteRound, Pow},
@@ -37,7 +38,7 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
     });
 
     let duration = start.elapsed();
-    println!("Test 1 done \telapsed time={:?}", duration);
+    debug!("Test 1 done \telapsed time={:?}", duration);
 
     if found_any_integer.not() {
         TestResult {
@@ -45,7 +46,7 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
             is_prime: None,
         }
     } else {
-        println!("\t test didn't pass");
+        debug!("\t test didn't pass");
         TestResult {
             continue_testing: false,
             is_prime: Some(false),
@@ -90,8 +91,8 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
         .unwrap_or(maxr);
 
     let duration = start.elapsed();
-    println!("Step 2 done \telapsed time={:?}", duration);
-    println!("\tr={}", &final_r);
+    debug!("Step 2 done \telapsed time={:?}", duration);
+    debug!("\tr={}", &final_r);
 
     context.r = final_r;
 
@@ -105,17 +106,17 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
 fn test3(n: &Integer, context: &mut Context) -> TestResult {
     let start = Instant::now();
 
-    let found_any = (context.r..1)
+    let found_any = (1..context.r)
         .into_par_iter()
-        .map(|i| -> Integer { Integer::from(i) })
+        .map(Integer::from )
         .map(|x| -> Integer { n.gcd_ref(&x).complete() })
-        .any(|gcd| -> bool { 1 < gcd || gcd < *n });
+        .any(|gcd| -> bool { 1 < gcd && gcd < *n });
 
     let duration = start.elapsed();
-    println!("Test 3 done \telapsed time={:?}", duration);
+    debug!("Test 3 done \telapsed time={:?}", duration);
 
     if found_any {
-        println!("\t test didn't pass");
+        debug!("\t test didn't pass");
         TestResult {
             continue_testing: false,
             is_prime: Some(false),
@@ -135,10 +136,10 @@ fn test4(n: &Integer, context: &mut Context) -> TestResult {
     let is_le = n <= &context.r;
 
     let duration = start.elapsed();
-    println!("Test 4 done \telapsed time={:?}", duration);
+    debug!("Test 4 done \telapsed time={:?}", duration);
 
     if is_le {
-        println!("\t test didn't pass");
+        debug!("\t test didn't pass");
         TestResult {
             continue_testing: false,
             is_prime: Some(true),
@@ -177,10 +178,10 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
     };
 
     let duration = start.elapsed();
-    println!("Test 5 done \telapsed time={:?}", duration);
+    debug!("Test 5 done \telapsed time={:?}", duration);
 
     if has_divisible_coefficient {
-        println!("\t test didn't pass");
+        debug!("\t test didn't pass");
         TestResult {
             continue_testing: false,
             is_prime: Some(false),
@@ -223,9 +224,9 @@ fn main() {
     if let Ok(incomplete) = Integer::parse(&input) {
         let n = incomplete.complete();
         let output = if is_prime(&n) { "is" } else { "is not" };
-        println!("{0} {1} prime", n, output);
+        info!("{0} {1} prime", n, output);
     } else {
-        panic!("Error parsing the input {}", input);
+        error!("Error parsing the input {}", input);
     }
 }
 
@@ -261,9 +262,8 @@ mod tests {
             739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911,
             919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997]);
 
-        for i in 2..=1000{
-            println!("i={}",i);
-            assert_eq!(primes.contains(&i),is_prime(&Integer::from(i)));
-        }
+        assert!((2..=1000).into_par_iter().all(|candidate| -> bool {
+            primes.contains(&candidate) == is_prime(&Integer::from(candidate))
+        }));
     }
 }
