@@ -62,19 +62,17 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
         .max(Integer::from(3u8))
         .try_into()
         .unwrap();
-
-    let mut r = 2;
-    let mut next_r = true;
+    
     let k_range = (1..=maxk)
         .into_par_iter()
         .map(Integer::from)
         .into_par_iter();
 
-    while next_r && r < maxr {
-        let r_as_ref_integer = &Integer::from(r);
-
-        next_r = k_range
-            .clone() //hopefully this only clones the iterator :)
+    let final_r = (2..maxr).into_par_iter().find_first(|r| -> bool{
+        let r_as_ref_integer = &Integer::from(*r);
+        let next_r = k_range
+            // @TODO: make sure this only clones the iterator
+            .clone() // hopefully this only clones the iterator :)
             .any(|k| -> bool {
                 if let Some(modd) = n.pow_mod_ref(&k, r_as_ref_integer) {
                     let modulo = Integer::from(modd);
@@ -82,17 +80,15 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
                 }
                 false
             });
-
-        r += 1;
-    }
-
-    r -= 1;
+        
+        next_r.not()
+    }).unwrap();
 
     let duration = start.elapsed();
     println!("Step 2 done \telapsed time={:?}", duration);
-    println!("\tr={}",&r);
+    println!("\tr={}",&final_r);
 
-    context.r = r;
+    context.r = final_r;
 
     TestResult {
         continue_testing: true,
