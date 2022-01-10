@@ -2,6 +2,11 @@
 
 WIP
 
+# Tests
+```
+cargo tests --release -- --tests-threads 3
+```
+
 # Version
 - cargo 1.56.0
 - rustc 1.56.1
