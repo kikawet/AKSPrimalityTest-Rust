@@ -3,8 +3,9 @@ use std::{
     ops::{Add, Not, Sub},
     time::Instant,
 };
+#[macro_use]
+extern crate log;
 
-use log::{debug, error, info};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rug::{
     ops::{CompleteRound, Pow},
@@ -92,7 +93,7 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
 
     let duration = start.elapsed();
     debug!("Step 2 done \telapsed time={:?}", duration);
-    debug!("\tr={}", &final_r);
+    trace!("\tr={}", &final_r);
 
     context.r = final_r;
 
@@ -217,6 +218,7 @@ fn is_prime(n: &Integer) -> bool {
 }
 
 fn main() {
+    env_logger::init();
     let args: Vec<String> = env::args().collect();
 
     let input = get_input(args);
