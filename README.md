@@ -7,7 +7,7 @@ WIP
 - rustc 1.56.1
 
 # TODO
- - [ ] add tests to the fn is_prime
+ - [ ] make sure tests actually pass 😒
  - [ ] refactor into multiple modules
  - [ ] profile
 
@@ -21,3 +21,4 @@ WIP
    - [x] test 3 - If 1 < gcd(a,n) < n for some a ≤ r, output composite
    - [x] test 4 - If n ≤ r, output prime
    - [x] test 5 - check that for every coeficient (ai) in (x-1)^n ai%n == 0 // Calculate binomials like madman
+ - [x] add tests to the fn is_prime
