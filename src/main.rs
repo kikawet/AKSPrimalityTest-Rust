@@ -123,6 +123,29 @@ fn test3(n: &Integer, context: &mut Context) -> TestResult {
     }
 }
 
+/// * @brief Step 4 - If n ≤ r, output prime
+fn test4(n: &Integer, context: &mut Context) -> TestResult {
+    let start = Instant::now();
+
+    let is_le = n <= &context.r;
+
+    let duration = start.elapsed();
+    println!("Test 4 done \telapsed time={:?}", duration);
+
+    if is_le {
+        TestResult {
+            continue_testing: false,
+            is_prime: Some(true),
+        }
+    } else {
+        println!("\t test didn't pass");
+        TestResult {
+            continue_testing: true,
+            is_prime: None,
+        }
+    }
+}
+
 /// * @brief Step 6 - n must be prime
 fn test6(_: &Integer, _: &mut Context) -> TestResult {
     TestResult {
@@ -132,7 +155,7 @@ fn test6(_: &Integer, _: &mut Context) -> TestResult {
 }
 
 fn is_prime(n: &Integer) -> bool {
-    let tests = [test1, test2, test3, test6];
+    let tests = [test1, test2, test3, test4, test6];
     let mut i = 1;
     let mut context = Context { r: 0 };
     let mut result = tests[0](n, &mut context);
