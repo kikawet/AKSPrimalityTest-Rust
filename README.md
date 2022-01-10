@@ -12,7 +12,6 @@ cargo tests --release -- --tests-threads 3
 - rustc 1.56.1
 
 # TODO
- - [ ] refactor into multiple modules
  - [ ] profile
 
 # DONE
@@ -27,3 +26,4 @@ cargo tests --release -- --tests-threads 3
    - [x] test 5 - check that for every coeficient (ai) in (x-1)^n ai%n == 0 // Calculate binomials like madman
  - [x] add tests to the fn is_prime
  - [x] make sure tests actually pass 😒
+ - [x] refactor into multiple modules
