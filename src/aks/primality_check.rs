@@ -1,10 +1,15 @@
-use std::{time::Instant, ops::{Not, Add, Sub}};
+use std::{
+    ops::{Add, Not, Sub},
+    time::Instant,
+};
 
 use log::{debug, trace};
 
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use rug::{Integer, Float, ops::{Pow, CompleteRound}, Complete};
-
+use rug::{
+    ops::{CompleteRound, Pow},
+    Complete, Float, Integer,
+};
 
 #[derive(Debug)]
 struct TestResult {
@@ -32,20 +37,15 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
             .is_integer()
     });
 
-    let duration = start.elapsed();
-    debug!("Test 1 done \telapsed time={:?}", duration);
+    debug!("Test 1 done \telapsed time={:?}", start.elapsed());
 
-    if found_any_integer.not() {
-        TestResult {
-            continue_testing: true,
-            is_prime: None,
-        }
-    } else {
+    if found_any_integer {
         debug!("\t test didn't pass");
-        TestResult {
-            continue_testing: false,
-            is_prime: Some(false),
-        }
+    }
+
+    TestResult {
+        continue_testing: !found_any_integer,
+        is_prime: found_any_integer.then_some(false),
     }
 }
 
@@ -85,8 +85,7 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
         })
         .unwrap_or(maxr);
 
-    let duration = start.elapsed();
-    debug!("Step 2 done \telapsed time={:?}", duration);
+    debug!("Step 2 done \telapsed time={:?}", start.elapsed());
     trace!("\tr={}", &final_r);
 
     context.r = final_r;
@@ -103,24 +102,19 @@ fn test3(n: &Integer, context: &mut Context) -> TestResult {
 
     let found_any = (1..context.r)
         .into_par_iter()
-        .map(Integer::from )
+        .map(Integer::from)
         .map(|x| -> Integer { n.gcd_ref(&x).complete() })
         .any(|gcd| -> bool { 1 < gcd && gcd < *n });
 
-    let duration = start.elapsed();
-    debug!("Test 3 done \telapsed time={:?}", duration);
+    debug!("Test 3 done \telapsed time={:?}", start.elapsed());
 
     if found_any {
         debug!("\t test didn't pass");
-        TestResult {
-            continue_testing: false,
-            is_prime: Some(false),
-        }
-    } else {
-        TestResult {
-            continue_testing: true,
-            is_prime: None,
-        }
+    }
+
+    TestResult {
+        continue_testing: !found_any,
+        is_prime: found_any.then_some(false),
     }
 }
 
@@ -130,20 +124,15 @@ fn test4(n: &Integer, context: &mut Context) -> TestResult {
 
     let is_le = n <= &context.r;
 
-    let duration = start.elapsed();
-    debug!("Test 4 done \telapsed time={:?}", duration);
+    debug!("Test 4 done \telapsed time={:?}", start.elapsed());
 
     if is_le {
         debug!("\t test didn't pass");
-        TestResult {
-            continue_testing: false,
-            is_prime: Some(true),
-        }
-    } else {
-        TestResult {
-            continue_testing: true,
-            is_prime: None,
-        }
+    }
+
+    TestResult {
+        continue_testing: !is_le,
+        is_prime: is_le.then_some(true),
     }
 }
 
@@ -172,20 +161,15 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
         i += &one;
     };
 
-    let duration = start.elapsed();
-    debug!("Test 5 done \telapsed time={:?}", duration);
+    debug!("Test 5 done \telapsed time={:?}", start.elapsed());
 
     if has_divisible_coefficient {
         debug!("\t test didn't pass");
-        TestResult {
-            continue_testing: false,
-            is_prime: Some(false),
-        }
-    } else {
-        TestResult {
-            continue_testing: true,
-            is_prime: None,
-        }
+    }
+
+    TestResult {
+        continue_testing: !has_divisible_coefficient,
+        is_prime: has_divisible_coefficient.then_some(false),
     }
 }
 
@@ -199,16 +183,16 @@ fn test6(_: &Integer, _: &mut Context) -> TestResult {
 
 pub fn is_prime(n: &Integer) -> bool {
     let tests = [test1, test2, test3, test4, test5, test6];
-    let mut i = 1;
     let mut context = Context { r: 0 };
-    let mut result = tests[0](n, &mut context);
 
-    while result.continue_testing && i < tests.len() {
-        result = tests[i](n, &mut context);
-        i += 1;
+    for test in tests {
+        let result = test(n, &mut context);
+        if !result.continue_testing {
+            return result.is_prime.unwrap();
+        }
     }
 
-    result.is_prime.unwrap()
+    unreachable!("By this point the test must be finished")
 }
 
 fn calculate_log2(n: &Integer) -> u32 {

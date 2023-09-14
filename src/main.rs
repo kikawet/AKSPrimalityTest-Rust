@@ -1,19 +1,16 @@
-#[macro_use]
-extern crate log;
+use std::env;
 
-use std::{
-    env,
-};
-
-use rug::{
-    Complete, Integer,
-};
+use env_logger::Env;
+use log::{error, info, LevelFilter};
+use rug::{Complete, Integer};
 
 mod aks;
 use aks::primality_check::is_prime;
 
 fn main() {
-    env_logger::init();
+    env_logger::Builder::from_env(Env::default().default_filter_or(LevelFilter::Info.as_str()))
+        .init();
+
     let args: Vec<String> = env::args().collect();
 
     let input = get_input(args);
