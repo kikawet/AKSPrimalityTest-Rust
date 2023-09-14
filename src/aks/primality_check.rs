@@ -1,11 +1,16 @@
 use std::{
-    ops::{Add, Not, Sub},
+    ops::{Add, AddAssign, DivAssign, MulAssign, Sub},
     time::Instant,
 };
 
+use itertools::iproduct;
 use log::{debug, trace};
 
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use rayon::{
+    iter::{IntoParallelIterator, ParallelIterator},
+    prelude::ParallelBridge,
+};
+
 use rug::{
     ops::{CompleteRound, Pow},
     Complete, Float, Integer,
@@ -53,37 +58,22 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
 fn test2(n: &Integer, context: &mut Context) -> TestResult {
     let start = Instant::now();
 
-    let maxk: u128 = Integer::from(calculate_log2(n)).pow(2).try_into().unwrap();
-    let maxr: u128 = Integer::from(calculate_log2(n))
-        .pow(5)
-        .add(Integer::from(1u8))
-        .max(Integer::from(3u8))
-        .try_into()
-        .unwrap();
+    let maxk: u128 = Into::<u128>::into(calculate_log2(n)).pow(2);
+    let maxr: u128 = Into::<u128>::into(calculate_log2(n)).pow(5).add(1).max(3);
 
-    let k_range = (1..=maxk)
-        .into_par_iter()
-        .map(Integer::from)
-        .into_par_iter();
+    let k_range = (1..=maxk).map(Integer::from);
+    let r_range = (2..maxr).map(Integer::from);
 
-    let final_r = (2..maxr)
-        .into_par_iter()
-        .find_first(|r| -> bool {
-            let r_as_ref_integer = &Integer::from(*r);
-            let next_r = k_range
-                // @TODO: make sure this only clones the iterator
-                .clone() // hopefully this only clones the iterator :)
-                .any(|k| -> bool {
-                    if let Some(modd) = n.pow_mod_ref(&k, r_as_ref_integer) {
-                        let modulo = Integer::from(modd);
-                        return modulo.eq(&1u8) || modulo.eq(&0u8);
-                    }
-                    false
-                });
-
-            next_r.not()
+    let final_r = iproduct!(r_range, k_range)
+        .par_bridge()
+        .find_first(|(r, k)| {
+            n.pow_mod_ref(&k, &r)
+                .map(Integer::from)
+                .filter(|modulo| modulo.eq(&1u8) || modulo.eq(&0u8))
+                .map(|_| false)
+                .unwrap_or(true)
         })
-        .unwrap_or(maxr);
+        .map_or(maxr, |(r, _)| r.to_u128().expect("Unable to finish step 2"));
 
     debug!("Step 2 done \telapsed time={:?}", start.elapsed());
     trace!("\tr={}", &final_r);
@@ -141,7 +131,7 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
     let start = Instant::now();
 
     let one = Integer::from(1);
-    let limit = n / Integer::from(2) - &one;
+    let limit = (n / Integer::from(2)) - &one;
     let mut current_root = one.clone();
     let mut i = one.clone();
 
@@ -151,14 +141,18 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
             break false;
         }
 
-        current_root *= n.sub(&i).complete().add(&one);
-        current_root /= &i;
+        if i.is_divisible(&Integer::from(100000)) {
+            trace!("Progres: {:?}", (&i / &limit).complete());
+        }
+
+        current_root.mul_assign(n.sub(&i).complete().add(&one));
+        current_root.div_assign(&i);
 
         if !current_root.is_divisible(n) {
             break true;
         }
 
-        i += &one;
+        i.add_assign(&one);
     };
 
     debug!("Test 5 done \telapsed time={:?}", start.elapsed());
