@@ -18,7 +18,6 @@ use rug::{
 
 #[derive(Debug)]
 struct TestResult {
-    continue_testing: bool,
     is_prime: Option<bool>,
 }
 
@@ -37,7 +36,7 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
         n_as_float
             .as_ref()
             .as_float()
-            .pow(1f64 / (b as f64))
+            .pow(1f64 / f64::from(b))
             .complete(256)
             .is_integer()
     });
@@ -49,7 +48,6 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
     }
 
     TestResult {
-        continue_testing: !found_any_integer,
         is_prime: found_any_integer.then_some(false),
     }
 }
@@ -58,32 +56,30 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
 fn test2(n: &Integer, context: &mut Context) -> TestResult {
     let start = Instant::now();
 
-    let maxk: u128 = Into::<u128>::into(calculate_log2(n)).pow(2);
-    let maxr: u128 = Into::<u128>::into(calculate_log2(n)).pow(5).add(1).max(3);
+    let max_k: u128 = Into::<u128>::into(calculate_log2(n)).pow(2);
+    let max_r: u128 = Into::<u128>::into(calculate_log2(n)).pow(5).add(1).max(3);
 
-    let k_range = (1..=maxk).map(Integer::from);
-    let r_range = (2..maxr).map(Integer::from);
+    let k_range = (1..=max_k).map(Integer::from);
+    let r_range = (2..max_r).map(Integer::from);
 
     let final_r = iproduct!(r_range, k_range)
         .par_bridge()
         .find_first(|(r, k)| {
-            n.pow_mod_ref(&k, &r)
+            n.pow_mod_ref(k, r)
                 .map(Integer::from)
                 .filter(|modulo| modulo.eq(&1u8) || modulo.eq(&0u8))
-                .map(|_| false)
-                .unwrap_or(true)
+                .map_or(true, |_| false)
         })
-        .map_or(maxr, |(r, _)| r.to_u128().expect("Unable to finish step 2"));
+        .map_or(max_r, |(r, _)| {
+            r.to_u128().expect("Unable to finish step 2")
+        });
 
     debug!("Step 2 done \telapsed time={:?}", start.elapsed());
     trace!("\tr={}", &final_r);
 
     context.r = final_r;
 
-    TestResult {
-        continue_testing: true,
-        is_prime: None,
-    }
+    TestResult { is_prime: None }
 }
 
 /// * @brief Step 3 - If 1 < gcd(a,n) < n for some a ≤ r, output composite
@@ -103,7 +99,6 @@ fn test3(n: &Integer, context: &mut Context) -> TestResult {
     }
 
     TestResult {
-        continue_testing: !found_any,
         is_prime: found_any.then_some(false),
     }
 }
@@ -121,7 +116,6 @@ fn test4(n: &Integer, context: &mut Context) -> TestResult {
     }
 
     TestResult {
-        continue_testing: !is_le,
         is_prime: is_le.then_some(true),
     }
 }
@@ -141,7 +135,7 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
             break false;
         }
 
-        if i.is_divisible(&Integer::from(100000)) {
+        if i.is_divisible(&Integer::from(100_000)) {
             trace!("Progres: {:?}", (&i / &limit).complete());
         }
 
@@ -162,7 +156,6 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
     }
 
     TestResult {
-        continue_testing: !has_divisible_coefficient,
         is_prime: has_divisible_coefficient.then_some(false),
     }
 }
@@ -170,19 +163,19 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
 /// * @brief Step 6 - n must be prime
 fn test6(_: &Integer, _: &mut Context) -> TestResult {
     TestResult {
-        continue_testing: false,
         is_prime: Some(true),
     }
 }
 
+#[must_use]
 pub fn is_prime(n: &Integer) -> bool {
     let tests = [test1, test2, test3, test4, test5, test6];
     let mut context = Context { r: 0 };
 
     for test in tests {
         let result = test(n, &mut context);
-        if !result.continue_testing {
-            return result.is_prime.unwrap();
+        if let Some(is_prime) = result.is_prime {
+            return is_prime;
         }
     }
 

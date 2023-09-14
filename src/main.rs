@@ -1,35 +1,22 @@
 use std::env;
 
+use aks_primality_test::aks::primality_check::is_prime;
 use env_logger::Env;
-use log::{error, info, LevelFilter};
+use log::{info, LevelFilter};
 use rug::{Complete, Integer};
-
-mod aks;
-use aks::primality_check::is_prime;
 
 fn main() {
     env_logger::Builder::from_env(Env::default().default_filter_or(LevelFilter::Info.as_str()))
         .init();
 
-    let args: Vec<String> = env::args().collect();
-
-    let input = get_input(args);
+    let default_input = "31";
+    let input = env::args().nth(1).unwrap_or(default_input.to_string());
 
     if let Ok(incomplete) = Integer::parse(&input) {
         let n = incomplete.complete();
-        let output = if is_prime(&n) { "is" } else { "is not" };
-        info!("{0} {1} prime", n, output);
+        let not = if is_prime(&n) { "" } else { "not" };
+        info!("{n} is {not} prime");
     } else {
-        error!("Error parsing the input {}", input);
+        panic!("Error parsing the input {input}");
     }
-}
-
-fn get_input(args: Vec<String>) -> String {
-    let default_int = "31";
-    let input = if args.len() < 0x2 {
-        default_int
-    } else {
-        &args[1]
-    };
-    String::from(input)
 }
