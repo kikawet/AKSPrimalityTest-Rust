@@ -8,7 +8,7 @@ mod primality_tests {
     use rayon::iter::{IntoParallelIterator, ParallelIterator};
     use rug::Integer;
 
-    use crate::aks::primality_check::is_prime;
+    use crate::primality_check::is_prime;
 
     // Note this useful idiom: importing names from outer (for mod tests) scope.
 

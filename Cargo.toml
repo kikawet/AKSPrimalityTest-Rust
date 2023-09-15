@@ -1,16 +1,6 @@
-[package]
-name = "aks_primality_test"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-env_logger = "0.10.0"
-itertools = "0.11.0"
-log = {version = "0.4.14", features = ["max_level_trace","release_max_level_debug"]}
-rayon = "1.5.1"
-rug = "1.14.0"
-
-# [env]
-# RUST_BACKTRACE=1
+[workspace]
+members=[
+    "aks_primality_test",
+    "cli"
+]
+resolver="2"

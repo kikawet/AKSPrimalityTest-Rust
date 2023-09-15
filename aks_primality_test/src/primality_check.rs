@@ -1,10 +1,11 @@
-use std::{
-    ops::{Add, AddAssign, DivAssign, MulAssign, Sub},
-    time::Instant,
-};
+use std::ops::{Add, AddAssign, DivAssign, MulAssign, Sub};
 
 use itertools::iproduct;
+
+#[cfg(feature = "log")]
 use log::{debug, trace};
+#[cfg(feature = "log")]
+use std::time::Instant;
 
 use rayon::{
     iter::{IntoParallelIterator, ParallelIterator},
@@ -27,6 +28,7 @@ struct Context {
 
 /// * @brief Step 1 - If n = a^b for integers a > 1 and b > 1, output composite
 fn test1(n: &Integer, _: &mut Context) -> TestResult {
+    #[cfg(feature = "log")]
     let start = Instant::now();
 
     let n_as_float = Float::with_val(u32::MAX, n);
@@ -41,10 +43,13 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
             .is_integer()
     });
 
-    debug!("Test 1 done \telapsed time={:?}", start.elapsed());
+    #[cfg(feature = "log")]
+    {
+        debug!("Test 1 done \telapsed time={:?}", start.elapsed());
 
-    if found_any_integer {
-        debug!("\t test didn't pass");
+        if found_any_integer {
+            debug!("\t test didn't pass");
+        }
     }
 
     TestResult {
@@ -54,6 +59,7 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
 
 /// * @brief Step 2 - Find the smallest r such that Or(n) > (log2 n)^2
 fn test2(n: &Integer, context: &mut Context) -> TestResult {
+    #[cfg(feature = "log")]
     let start = Instant::now();
 
     let max_k: u128 = Into::<u128>::into(calculate_log2(n)).pow(2);
@@ -74,8 +80,11 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
             r.to_u128().expect("Unable to finish step 2")
         });
 
-    debug!("Step 2 done \telapsed time={:?}", start.elapsed());
-    trace!("\tr={}", &final_r);
+    #[cfg(feature = "log")]
+    {
+        debug!("Step 2 done \telapsed time={:?}", start.elapsed());
+        trace!("\tr={}", &final_r);
+    }
 
     context.r = final_r;
 
@@ -84,6 +93,7 @@ fn test2(n: &Integer, context: &mut Context) -> TestResult {
 
 /// * @brief Step 3 - If 1 < gcd(a,n) < n for some a ≤ r, output composite
 fn test3(n: &Integer, context: &mut Context) -> TestResult {
+    #[cfg(feature = "log")]
     let start = Instant::now();
 
     let found_any = (1..context.r)
@@ -92,10 +102,13 @@ fn test3(n: &Integer, context: &mut Context) -> TestResult {
         .map(|x| -> Integer { n.gcd_ref(&x).complete() })
         .any(|gcd| -> bool { 1 < gcd && gcd < *n });
 
-    debug!("Test 3 done \telapsed time={:?}", start.elapsed());
+    #[cfg(feature = "log")]
+    {
+        debug!("Test 3 done \telapsed time={:?}", start.elapsed());
 
-    if found_any {
-        debug!("\t test didn't pass");
+        if found_any {
+            debug!("\t test didn't pass");
+        }
     }
 
     TestResult {
@@ -105,14 +118,18 @@ fn test3(n: &Integer, context: &mut Context) -> TestResult {
 
 /// * @brief Step 4 - If n ≤ r, output prime
 fn test4(n: &Integer, context: &mut Context) -> TestResult {
+    #[cfg(feature = "log")]
     let start = Instant::now();
 
     let is_le = n <= &context.r;
 
-    debug!("Test 4 done \telapsed time={:?}", start.elapsed());
+    #[cfg(feature = "log")]
+    {
+        debug!("Test 4 done \telapsed time={:?}", start.elapsed());
 
-    if is_le {
-        debug!("\t test didn't pass");
+        if is_le {
+            debug!("\t test didn't pass");
+        }
     }
 
     TestResult {
@@ -122,6 +139,7 @@ fn test4(n: &Integer, context: &mut Context) -> TestResult {
 
 /// * @brief Step 5 - if any coeficient (ai) in (x-1)^n ai%n != 0, output composite
 fn test5(n: &Integer, _: &mut Context) -> TestResult {
+    #[cfg(feature = "log")]
     let start = Instant::now();
 
     let one = Integer::from(1);
@@ -135,6 +153,7 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
             break false;
         }
 
+        #[cfg(feature = "log")]
         if i.is_divisible(&Integer::from(100_000)) {
             trace!("Progres: {:?}", (&i / &limit).complete());
         }
@@ -149,10 +168,13 @@ fn test5(n: &Integer, _: &mut Context) -> TestResult {
         i.add_assign(&one);
     };
 
-    debug!("Test 5 done \telapsed time={:?}", start.elapsed());
+    #[cfg(feature = "log")]
+    {
+        debug!("Test 5 done \telapsed time={:?}", start.elapsed());
 
-    if has_divisible_coefficient {
-        debug!("\t test didn't pass");
+        if has_divisible_coefficient {
+            debug!("\t test didn't pass");
+        }
     }
 
     TestResult {

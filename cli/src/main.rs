@@ -1,6 +1,6 @@
 use std::env;
 
-use aks_primality_test::aks::primality_check::is_prime;
+use aks_primality_test::primality_check::is_prime;
 use env_logger::Env;
 use log::{info, LevelFilter};
 use rug::{Complete, Integer};
@@ -14,8 +14,8 @@ fn main() {
 
     if let Ok(incomplete) = Integer::parse(&input) {
         let n = incomplete.complete();
-        let not = if is_prime(&n) { "" } else { "not" };
-        info!("{n} is {not} prime");
+        let not = if is_prime(&n) { "" } else { " not" };
+        info!("{n} is{not} prime");
     } else {
         panic!("Error parsing the input {input}");
     }
