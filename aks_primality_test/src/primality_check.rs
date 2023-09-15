@@ -12,10 +12,7 @@ use rayon::{
     prelude::ParallelBridge,
 };
 
-use rug::{
-    ops::{CompleteRound, Pow},
-    Complete, Float, Integer,
-};
+use rug::{ops::Pow, Complete, Float, Integer};
 
 #[derive(Debug)]
 struct TestResult {
@@ -31,17 +28,13 @@ fn test1(n: &Integer, _: &mut Context) -> TestResult {
     #[cfg(feature = "log")]
     let start = Instant::now();
 
-    let n_as_float = Float::with_val(u32::MAX, n);
     let top_limit = calculate_log2(n);
+    let n: Float = Float::with_val(256, 0) + n;
 
-    let found_any_integer = (2..=top_limit).into_par_iter().any(|b| -> bool {
-        n_as_float
-            .as_ref()
-            .as_float()
-            .pow(1f64 / f64::from(b))
-            .complete(256)
-            .is_integer()
-    });
+    let found_any_integer = (2..=top_limit)
+        .into_par_iter()
+        .map(f64::from)
+        .any(|b| n.clone().pow(1f64 / b).is_integer());
 
     #[cfg(feature = "log")]
     {

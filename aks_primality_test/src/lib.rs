@@ -30,51 +30,15 @@ mod primality_tests {
         .collect()
     }
 
-    #[test] // this test takes ~40 seconds to finish
-    #[ignore = "Duplicated test"]
-    fn test_nums_below_10() {
-        let primes = primes_below1000();
-
-        assert!((2..=10)
-            .into_par_iter()
-            .map(Integer::from)
-            .all(|candidate| -> bool { primes.contains(&candidate) == is_prime(&candidate) }));
-    }
-
-    #[test] // this test takes ~40 seconds to finish
-    #[ignore = "Duplicated test"]
-    fn test_nums_below_100() {
-        let primes = primes_below1000();
-
-        assert!((2..=100)
-            .into_par_iter()
-            .map(Integer::from)
-            .all(|candidate| -> bool { primes.contains(&candidate) == is_prime(&candidate) }));
-    }
-
-    #[test] // this test takes ~40 seconds to finish
-    #[ignore = "Duplicated test"]
-    fn test_nums_below_200() {
-        let primes = primes_below1000();
-
-        assert!((2..=200)
-            .into_par_iter()
-            .map(Integer::from)
-            .all(|candidate| -> bool { primes.contains(&candidate) == is_prime(&candidate) }));
-    }
-
-    #[test] // this test takes ~250 seconds to finish
-            //#[ignore]
+    #[test]
     fn test_nums_below_1000() {
         let primes = primes_below1000();
 
         let failed = (2..=1000)
             .into_par_iter()
             .map(Integer::from)
-            .filter(|candidate| -> bool { primes.contains(candidate) != is_prime(candidate) })
-            .map(|candidate| unreachable!("Test failed on {candidate}"))
-            .collect::<Vec<_>>();
+            .find_any(|candidate| primes.contains(&candidate) != is_prime(&candidate));
 
-        assert!(failed.is_empty());
+        assert_eq!(failed, None);
     }
 }

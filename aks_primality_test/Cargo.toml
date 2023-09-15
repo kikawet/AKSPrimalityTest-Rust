@@ -8,9 +8,9 @@ edition = "2021"
 [dependencies]
 env_logger = {version="0.10.0", optional=true}
 itertools = "0.11.0"
-log = {version = "0.4.14", features = ["max_level_trace","release_max_level_debug"], optional=true}
-rayon = "1.5.1"
-rug = "1.14.0"
+log = {version = "0.4.14", features = ["max_level_trace","release_max_level_trace"], optional=true}
+rayon = "1.7.0"
+rug = {version="1.22.0", default-features = false, features = ["integer", "float"]}
 
 [features]
 all=[]
