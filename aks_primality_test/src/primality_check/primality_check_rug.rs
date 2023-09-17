@@ -12,7 +12,7 @@ use rayon::{
     prelude::ParallelBridge,
 };
 
-use rug::{ops::Pow, Complete, Float, Integer};
+use rug::{Complete, Float, Integer};
 
 use super::{Context, TestResult};
 
@@ -26,8 +26,7 @@ pub(crate) fn test1(n: &Integer, _: &mut Context) -> TestResult {
 
     let found_any_integer = (2..=top_limit)
         .into_par_iter()
-        .map(f64::from)
-        .any(|b| n.clone().pow(1f64 / b).is_integer());
+        .any(|b| n.clone().root(b).is_integer());
 
     #[cfg(feature = "log")]
     {

@@ -1,6 +1,7 @@
+//#[cfg(feature = "rug")]
 pub mod primality_check;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rug"))]
 mod primality_tests {
 
     use std::collections::HashSet;
@@ -35,9 +36,8 @@ mod primality_tests {
         let primes = primes_below1000();
 
         let failed = (2..=1000)
-            .into_par_iter()
             .map(Integer::from)
-            .find_any(|candidate| primes.contains(&candidate) != is_prime(&candidate));
+            .find(|candidate| primes.contains(&candidate) != is_prime(&candidate));
 
         assert_eq!(failed, None);
     }

@@ -1,6 +1,3 @@
 [workspace]
-members=[
-    "aks_primality_test",
-    "cli"
-]
-resolver="2"
+members = ["aks_primality_test", "cli", "wasm"]
+resolver = "2"

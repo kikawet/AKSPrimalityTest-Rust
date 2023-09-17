@@ -13,7 +13,10 @@ log = { version = "0.4.14", features = [
     "release_max_level_debug",
 ] }
 rug = "1.14.0"
-aks_primality_test = { path = "../aks_primality_test" }
+aks_primality_test = { path = "../aks_primality_test", features = [
+    "log",
+    "rug",
+] }
 
 [[bin]]
 name = "aks"
