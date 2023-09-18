@@ -1,6 +1,5 @@
-use std::str::FromStr;
-
 use aks_primality_test::primality_check::{self, TestInput};
+use std::str::FromStr;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]

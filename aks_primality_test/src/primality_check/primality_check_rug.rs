@@ -4,15 +4,11 @@ use itertools::iproduct;
 
 #[cfg(feature = "log")]
 use log::{debug, trace};
+use rug::{Complete, Float, Integer};
 #[cfg(feature = "log")]
 use std::time::Instant;
 
-use rayon::{
-    iter::{IntoParallelIterator, ParallelIterator},
-    prelude::ParallelBridge,
-};
-
-use rug::{Complete, Float, Integer};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use super::{Context, TestResult};
 
@@ -54,8 +50,7 @@ pub(crate) fn test2(n: &Integer, context: &mut Context) -> TestResult {
     let r_range = (2..max_r).map(Integer::from);
 
     let final_r = iproduct!(r_range, k_range)
-        .par_bridge()
-        .find_first(|(r, k)| {
+        .find(|(r, k)| {
             n.pow_mod_ref(k, r)
                 .map(Integer::from)
                 .filter(|modulo| modulo.eq(&1u8) || modulo.eq(&0u8))
@@ -84,8 +79,8 @@ pub(crate) fn test3(n: &Integer, context: &mut Context) -> TestResult {
     let found_any = (1..context.r)
         .into_par_iter()
         .map(Integer::from)
-        .map(|x| -> Integer { n.gcd_ref(&x).complete() })
-        .any(|gcd| -> bool { 1 < gcd && gcd < *n });
+        .map(|x| n.gcd_ref(&x).complete())
+        .any(|gcd| 1 < gcd && gcd < *n);
 
     #[cfg(feature = "log")]
     {
